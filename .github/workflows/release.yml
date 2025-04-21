@@ -1,0 +1,97 @@
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - "v*"
+
+env:
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  release:
+    name: release
+
+    permissions:
+      packages: write
+      checks: write
+      contents: read
+      deployments: write
+
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4.2.2
+
+      - uses: actions-rs/toolchain@v1.0.7
+        with:
+          toolchain: stable
+          components: clippy
+          override: true
+          target: x86_64-unknown-linux-gnu
+
+      - name: Get Rust toolchain
+        id: toolchain
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
+
+      - name: cache dependencies
+        uses: Swatinem/rust-cache@v2.7.8
+        with:
+          prefix-key: ${{ env.RUST_CACHE_VERSION }}-rust
+
+      - name: clippy check
+        uses: sksat/action-clippy@v1.1.1
+        with:
+          reporter: github-check
+
+      - name: install cargo-license
+        uses: actions-rs/cargo@v1.0.3
+        with:
+          command: install
+          args: cargo-license
+
+      - name: unit test
+        run: |
+          cargo test --no-run --locked
+          cargo test
+
+      - name: release build
+        run: cargo build --release
+
+      - run: |
+          mkdir discord-webhook-429-test
+          VERSION_NAME=${GITHUB_REF##*/}
+          if [[ $VERSION_NAME == "master" ]]; then
+              VERSION_NAME=$(git rev-parse --short HEAD)
+          elif [[ ${VERSION_NAME:0:1} == "v" ]]; then
+              VERSION_NAME=${VERSION_NAME:1}
+          fi
+          echo "$VERSION_NAME" > discord-webhook-429-test/VERSION.txt
+          cp LICENSE README.md discord-webhook-429-test/
+          cargo license \
+            --authors \
+            --do-not-bundle \
+            --avoid-dev-deps \
+            --avoid-build-deps \
+              > discord-webhook-429-test/CREDITS
+          cp target/release/discord-webhook-429-test discord-webhook-429-test/
+          zip -r discord-webhook-429-test-linux.zip discord-webhook-429-test
+
+
+      - name: pre-release
+        uses: softprops/action-gh-release@v2.2.2
+        if: "! startsWith(github.ref, 'refs/tags/')"
+        with:
+          tag_name: nightly-${{ github.sha }}
+          prerelease: true
+          fail_on_unmatched_files: true
+          files: |
+            discord-webhook-429-test-linux.zip
+
+      - name: tagged-release
+        uses: softprops/action-gh-release@v2.2.2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          fail_on_unmatched_files: true
+          files: |
+            discord-webhook-429-test-linux.zip
