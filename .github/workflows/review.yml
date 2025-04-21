@@ -17,29 +17,26 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4.2.2
+      - name: Get Rust toolchain
+        id: toolchain
+        run: |
+          awk -F'[ ="]+' '$1 == "channel" { print "toolchain=" $2 }' rust-toolchain >> "$GITHUB_OUTPUT"
 
-      - uses: actions-rs/toolchain@v1.0.7
+      - name: install clippy
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
+          toolchain: ${{ steps.toolchain.outputs.toolchain }}
           components: clippy
-          override: true
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@v2.7.8
 
       - name: clippy check
-        uses: actions-rs/clippy-check@v1.0.7
+        uses: sksat/action-clippy@v1.1.1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
-
-      - name: compile for unit test
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
-          args: --no-run --locked
+          reporter: github-pr-review
 
       - name: unit test
-        uses: actions-rs/cargo@v1.0.3
-        with:
-          command: test
+        run: |
+          cargo test --no-run --locked
+          cargo test
