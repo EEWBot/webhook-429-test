@@ -1,3 +1,3 @@
-# Discord Webhook 429 test utility
+# Webhook 429 test utility
 
 
