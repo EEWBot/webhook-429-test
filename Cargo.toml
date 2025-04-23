@@ -1,5 +1,5 @@
 [package]
-name = "discord-webhook-429-test"
+name = "webhook-429-test"
 version = "0.1.0"
 edition = "2024"
 

@@ -45,23 +45,23 @@ jobs:
         run: cargo build --release
 
       - run: |
-          mkdir discord-webhook-429-test
+          mkdir webhook-429-test
           VERSION_NAME=${GITHUB_REF##*/}
           if [[ $VERSION_NAME == "master" ]]; then
               VERSION_NAME=$(git rev-parse --short HEAD)
           elif [[ ${VERSION_NAME:0:1} == "v" ]]; then
               VERSION_NAME=${VERSION_NAME:1}
           fi
-          echo "$VERSION_NAME" > discord-webhook-429-test/VERSION.txt
-          cp LICENSE README.md discord-webhook-429-test/
+          echo "$VERSION_NAME" > webhook-429-test/VERSION.txt
+          cp LICENSE README.md webhook-429-test/
           cargo license \
             --authors \
             --do-not-bundle \
             --avoid-dev-deps \
             --avoid-build-deps \
-              > discord-webhook-429-test/CREDITS
-          cp target/release/discord-webhook-429-test discord-webhook-429-test/
-          zip -r discord-webhook-429-test-linux.zip discord-webhook-429-test
+              > webhook-429-test/CREDITS
+          cp target/release/webhook-429-test webhook-429-test/
+          zip -r webhook-429-test-linux.zip webhook-429-test
 
 
       - name: pre-release
@@ -72,7 +72,7 @@ jobs:
           prerelease: true
           fail_on_unmatched_files: true
           files: |
-            discord-webhook-429-test-linux.zip
+            webhook-429-test-linux.zip
 
       - name: tagged-release
         uses: softprops/action-gh-release@v2.2.2
@@ -80,4 +80,4 @@ jobs:
         with:
           fail_on_unmatched_files: true
           files: |
-            discord-webhook-429-test-linux.zip
+            webhook-429-test-linux.zip
