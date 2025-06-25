@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v4.2.2
 
       - name: cache dependencies
-        uses: Swatinem/rust-cache@v2.7.8
+        uses: Swatinem/rust-cache@v2.8.0
 
       - name: clippy check
         uses: sksat/action-clippy@v1.1.1
