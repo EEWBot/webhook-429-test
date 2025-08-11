@@ -20,7 +20,7 @@ jobs:
 
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4.2.2
+      - uses: actions/checkout@v4.3.0
 
       - name: cache dependencies
         uses: Swatinem/rust-cache@v2.8.0
